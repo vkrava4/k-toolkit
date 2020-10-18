@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bufio"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 
 var (
 	DefaultDirPermMode = os.FileMode(0700)
+	EndLineDelimiter   = byte('\n')
 )
 
 // FileExists returns a boolean indicating whether file (not a directory) with given path exist
@@ -57,4 +60,33 @@ func DirectoryWalk(dir string, cascading bool, suffix string, fileResults *[]str
 		}
 	}
 	return nil
+}
+
+func ConcatenateFiles(source string, output *os.File) (int64, error) {
+	var totalWritten int64
+
+	var file, errOpen = os.Open(source)
+	if errOpen != nil {
+		return 0, errOpen
+	}
+
+	var reader = bufio.NewReader(file)
+
+	for {
+		var line, readErr = reader.ReadString(EndLineDelimiter)
+		if readErr != nil && readErr == io.EOF {
+			break
+		} else if readErr != nil && readErr != io.EOF {
+			os.Exit(-1)
+		}
+
+		var bytesWritten, errWrite = output.WriteString(line)
+		if errWrite != nil {
+			return 0, errWrite
+		}
+
+		totalWritten += int64(bytesWritten)
+	}
+
+	return totalWritten, nil
 }

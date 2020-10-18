@@ -2,10 +2,14 @@ package validation
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/vkrava4/k-toolkit/util"
 	"os"
-	"path/filepath"
 	"strings"
+)
+
+var (
+	redColor = color.New(color.FgRed)
 )
 
 type Result struct {
@@ -63,13 +67,8 @@ func (v *Result) ShouldExistAsFileOrDirectory(sources []string) *Result {
 	}
 
 	for _, src := range sources {
-		var srcAbsPath, errAbsPath = filepath.Abs(src)
-		if errAbsPath != nil {
-			invalidate(v, errAbsPath.Error())
-		}
-
-		if _, isNotExistErr := os.Stat(srcAbsPath); os.IsNotExist(isNotExistErr) {
-			invalidate(v, fmt.Sprintf("File or directory: '%s' can not be found", srcAbsPath))
+		if _, isNotExistErr := os.Stat(src); os.IsNotExist(isNotExistErr) {
+			invalidate(v, fmt.Sprintf("File or directory: '%s' can not be found", src))
 		}
 	}
 
@@ -119,8 +118,10 @@ func (v *Result) ShouldContainAnyFilesWithPattern(sources []string, cascading bo
 	return v
 }
 
-func (v *Result) PrintPretty() *Result {
-	panic("implement me")
+func (v *Result) PrintPretty() {
+	for _, message := range v.ValidationErrors {
+		fmt.Println(redColor.Sprintf(" - %s", message))
+	}
 }
 
 func invalidate(v *Result, message string) {

@@ -173,6 +173,12 @@ func setup() {
 	var file1SubDir4, _ = os.Create(existingTestFile1SubDir4)
 	var file2SubDir4, _ = os.Create(existingTestFile2SubDir4)
 
+	_, _ = file1.WriteString("file1")
+	_, _ = file2.WriteString("file2")
+	_, _ = file3.WriteString("file3")
+	_, _ = file1SubDir4.WriteString("file1SubDir4")
+	_, _ = file2SubDir4.WriteString("file2SubDir4")
+
 	_ = file1.Close()
 	_ = file2.Close()
 	_ = file3.Close()
@@ -193,4 +199,31 @@ func destroy() {
 	_ = os.RemoveAll(existingTestSubDir4Path)
 
 	_ = os.RemoveAll(existingTestRootPath)
+}
+
+func TestConcatenateFiles(t *testing.T) {
+	type args struct {
+		source string
+		output *os.File
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int64
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConcatenateFiles(tt.args.source, tt.args.output)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConcatenateFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ConcatenateFiles() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

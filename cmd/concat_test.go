@@ -6,6 +6,8 @@ import (
 	"github.com/vkrava4/k-toolkit/util"
 	"github.com/vkrava4/k-toolkit/validation"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -19,7 +21,7 @@ var (
 	existingOneFileInDirectory         = existingTestDirPathWithOneFile + "/existing_one_file.out"
 )
 
-func TestRunConcatCmd(t *testing.T) {
+func TestConcatValidate(t *testing.T) {
 	type args struct {
 		sources string
 		output  string
@@ -122,17 +124,21 @@ func TestRunConcatCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var actualResult = RunConcatCmd(tt.args.sources, tt.args.output)
-			if actualResult.Success != tt.result.Success {
-				t.Error(tt, fmt.Sprintf("Actual: '%t', Expected: '%t'", actualResult.Success, tt.result.Success))
+			var sourcesPath []string
+
+			for _, src := range strings.Split(tt.args.sources, ",") {
+				var srcAbsPath, _ = filepath.Abs(strings.TrimSpace(src))
+				sourcesPath = append(sourcesPath, srcAbsPath)
 			}
 
-			if actualResult.ValidationResult.IsValid != tt.result.ValidationResult.IsValid {
-				t.Error(tt, fmt.Sprintf("Actual: '%t', Expected: '%t'", actualResult.ValidationResult.IsValid, tt.result.ValidationResult.IsValid))
+			var validationResult = Validate(sourcesPath, tt.args.output)
+
+			if validationResult.IsValid != tt.result.ValidationResult.IsValid {
+				t.Error(tt, fmt.Sprintf("Actual: '%t', Expected: '%t'", validationResult.IsValid, tt.result.ValidationResult.IsValid))
 			}
 
-			if !util.EqualSliceS(actualResult.ValidationResult.ValidationErrors, tt.result.ValidationResult.ValidationErrors) {
-				t.Error(tt, fmt.Sprintf("Actual: '%q', Expected: %q", actualResult.ValidationResult.ValidationErrors, tt.result.ValidationResult.ValidationErrors))
+			if !util.EqualSliceS(validationResult.ValidationErrors, tt.result.ValidationResult.ValidationErrors) {
+				t.Error(tt, fmt.Sprintf("Actual: '%q', Expected: %q", validationResult.ValidationErrors, tt.result.ValidationResult.ValidationErrors))
 			}
 		})
 	}
