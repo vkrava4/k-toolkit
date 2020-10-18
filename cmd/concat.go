@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vkrava4/k-toolkit/execution"
 	"github.com/vkrava4/k-toolkit/validation"
+	"path/filepath"
 	"strings"
 )
 
@@ -26,9 +27,15 @@ import (
 var concatCmd = &cobra.Command{
 	Use:   "concat",
 	Short: "Concatenates provided set of files or files in given directory(es)",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var executionResult = RunConcatCmd(args[0], args[1])
+		var executionResult *execution.Result
+		if len(args) > 1 {
+			executionResult = RunConcatCmd(args[0], args[1])
+		} else {
+			executionResult = RunConcatCmd("", args[0])
+		}
+
 		if executionResult.Success && executionResult.ValidationResult.IsValid {
 			//	todo print success
 		} else {
@@ -37,19 +44,25 @@ var concatCmd = &cobra.Command{
 	},
 }
 
+var (
+	fileSuffix string
+)
+
 func RunConcatCmd(sources string, output string) *execution.Result {
 	var executionResult = &execution.Result{}
 
 	var sourcesSlice []string
 	for _, src := range strings.Split(sources, ",") {
-		sourcesSlice = append(sourcesSlice, strings.TrimSpace(src))
+		var srcAbsPath, _ = filepath.Abs(strings.TrimSpace(src))
+		sourcesSlice = append(sourcesSlice, srcAbsPath)
 	}
 
 	var validationResult = validation.Init().
 		ShouldNotBeNilOrBlank(sourcesSlice).
 		ShouldExistAsFileOrDirectory(sourcesSlice).
 		ShouldNotBeBlankS(output).
-		ShouldNotExistInPath(output)
+		ShouldNotExistInPath(output).
+		ShouldContainAnyFilesWithPattern(sourcesSlice, true, fileSuffix)
 
 	if !validationResult.IsValid {
 		executionResult.Success = false
@@ -62,4 +75,5 @@ func RunConcatCmd(sources string, output string) *execution.Result {
 func init() {
 	rootCmd.AddCommand(concatCmd)
 
+	concatCmd.Flags().StringVarP(&fileSuffix, "file-suffix", "s", fileSuffix, "A suffix of files which should be included for concatenation")
 }

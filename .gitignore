@@ -8,6 +8,7 @@ k-toolkit
 
 # Test binary, built with `go test -c`
 *.test
+*.out
 
 # Intellij configs
 .idea

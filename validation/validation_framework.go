@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"github.com/vkrava4/k-toolkit/util"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +18,7 @@ type Framework interface {
 	ShouldNotBeNilOrBlankS()
 	ShouldExistAsFileOrDirectory()
 	ShouldNotExistAsFile()
+	ShouldContainAnyFilesWithPattern()
 
 	PrintPretty()
 }
@@ -74,12 +76,47 @@ func (v *Result) ShouldExistAsFileOrDirectory(sources []string) *Result {
 	return v
 }
 
-func (v *Result) ShouldNotExistInPath(string) *Result {
+func (v *Result) ShouldNotExistInPath(path string) *Result {
 	if !v.IsValid {
 		return v
 	}
 
-	//panic("implement me")
+	if util.FileExists(path) {
+		invalidate(v, fmt.Sprintf("Output file %s already exists", path))
+	}
+
+	return v
+}
+
+func (v *Result) ShouldContainAnyFilesWithPattern(sources []string, cascading bool, pattern string) *Result {
+	if !v.IsValid {
+		return v
+	}
+
+	var files []string
+	var err error
+
+	for _, src := range sources {
+		if util.FileExists(src) {
+			files = append(files, src)
+		} else {
+			var directoriesWalkFiles, errDirectoriesWalk = util.DirectoriesWalk(sources, cascading, pattern)
+			err = errDirectoriesWalk
+			if len(directoriesWalkFiles) > 0 {
+				files = append(files, directoriesWalkFiles...)
+			}
+		}
+	}
+
+	fmt.Println(files)
+
+	if err != nil {
+		invalidate(v, err.Error())
+	} else if len(files) == 1 {
+		invalidate(v, "Provided directory(es) contain only one file matching concatenation criteria")
+	} else if len(files) == 0 {
+		invalidate(v, "Provided directory(es) does not contain any files matched for concatenation")
+	}
 
 	return v
 }
