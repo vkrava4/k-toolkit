@@ -108,8 +108,6 @@ func (v *Result) ShouldContainAnyFilesWithPattern(sources []string, cascading bo
 		}
 	}
 
-	fmt.Println(files)
-
 	if err != nil {
 		invalidate(v, err.Error())
 	} else if len(files) == 1 {
