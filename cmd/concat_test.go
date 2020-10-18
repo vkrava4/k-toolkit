@@ -106,7 +106,7 @@ func TestRunConcatCmd(t *testing.T) {
 			}},
 		},
 
-		// 3
+		// 8
 		{
 			name: "Should return validation.Result.IsValid=true when source files exist and output file does not",
 			args: args{sources: existingOutputFilePath + "," + existingOneFileInDirectory, output: "test.out"},
